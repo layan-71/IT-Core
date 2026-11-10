@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="Layan Al-anazi">
+    <meta name="description" content="IT Core - Developed and Designed by Layan Al-anazi">
+    <title>IT Core | Enterprise IT Service Desk</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        dock: {
+                            navy: '#0b1320',
+                            header: '#132238',
+                            darkNavy: '#070d18',
+                            accent: '#059669', // لون أخضر مؤسسي رئيسي
+                            gold: '#f59e0b',
+                            lightBg: '#f8fafc',
+                            cardBg: '#ffffff',
+                            hoverBg: '#ecfdf5',
+                            text: '#1e293b',
+                            subtext: '#64748b',
+                            border: '#e2e8f0',
+                            success: '#10b981',
+                            warning: '#f59e0b',
+                            danger: '#ef4444',
+                            info: '#3b82f6'
+                        }
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #ffffff;
+            color: #1e293b;
+        }
+        .dark body {
+            background-color: #0b1320;
+            color: #f8fafc;
+        }
+        .dock-input:focus {
+            outline: 2px solid #059669;
+            outline-offset: -1px;
+        }
+        .dock-tile {
+            transition: all 0.2s ease-in-out;
+            border: 1px solid #e2e8f0;
+            background-color: #ffffff;
+        }
+        .dock-tile:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+            border-color: #059669;
+        }
+    </style>
+</head>
+<body class="flex flex-col h-screen overflow-hidden text-sm select-none transition-colors duration-200">
+
+    <!-- Top Header Bar -->
+    <header class="bg-dock-header text-white h-12 flex items-center justify-between px-4 z-30 shadow-md border-b border-dock-border">
+        <div class="flex items-center space-x-3">
+            <button id="sidebarToggle" onclick="toggleSidebar()" class="p-1.5 hover:bg-slate-800 rounded transition-colors text-slate-200">
+                <i class="fas fa-bars text-lg"></i>
+            </button>
+            <div class="flex items-center space-x-2 cursor-pointer" onclick="switchTab('dashboard')">
+                <div class="bg-emerald-600 text-white px-2 py-0.5 font-bold text-xs rounded tracking-wider flex items-center gap-1 shadow-sm">
+                    <i class="fas fa-microchip text-xs"></i> IT CORE
+                </div>
+                <span class="font-bold text-base tracking-wide text-white hidden sm:inline">IT Service Management</span>
+            </div>
+        </div>
+
+        <!-- Global Search Bar -->
+        <div class="hidden md:flex items-center flex-1 max-w-xl mx-8">
+            <div class="relative w-full">
+                <input type="text" id="globalSearchInput" onkeyup="handleGlobalSearch()" placeholder="Search tickets, IT assets, or solutions..." 
+                       class="w-full bg-[#1b2a4a] text-white placeholder-slate-300 text-xs rounded px-9 py-1.5 focus:bg-white focus:text-dock-navy focus:placeholder-slate-400 transition-all border border-transparent focus:border-emerald-500">
+                <i class="fas fa-search absolute left-3 top-2 text-slate-300 text-xs"></i>
+            </div>
+        </div>
+
+        <!-- Header Actions & Profile -->
+        <div class="flex items-center space-x-2">
+            <!-- AI Assistant Quick Toggle -->
+            <button onclick="toggleAiChat()" class="p-2 hover:bg-slate-800 rounded-full text-emerald-400 transition-colors" title="AI Support Assistant">
+                <i class="fas fa-robot text-base"></i>
+            </button>
+
+            <!-- Dark Mode Switcher -->
+            <button onclick="toggleDarkMode()" class="p-2 hover:bg-slate-800 rounded-full text-slate-200 transition-colors" title="Toggle Theme">
+                <i id="themeIcon" class="fas fa-moon"></i>
+            </button>
+
+            <!-- Notifications Center -->
+            <div class="relative">
+                <button onclick="toggleNotifications()" class="p-2 hover:bg-slate-800 rounded-full relative text-slate-200 transition-colors">
+                    <i class="fas fa-bell"></i>
+                    <span id="notifBadge" class="absolute top-1 right-1 w-2 h-2 bg-dock-gold rounded-full"></span>
+                </button>
+                <div id="notifDropdown" class="hidden absolute right-0 mt-2 w-72 bg-white text-dock-text rounded border border-dock-border shadow-xl z-50 p-2 text-xs">
+                    <div class="font-bold border-b border-dock-border pb-1 mb-2 flex justify-between items-center">
+                        <span class="text-dock-navy">Live Notifications</span>
+                        <span class="text-[10px] text-emerald-600 cursor-pointer" onclick="clearNotifs()">Clear All</span>
+                    </div>
+                    <div id="notifList" class="space-y-2 max-h-48 overflow-y-auto">
+                        <div class="p-2 bg-emerald-50 rounded border-l-2 border-emerald-600">
+                            <p class="font-bold text-[11px] text-dock-navy">Ticket INC-10492 Updated</p>
+                            <p class="text-[10px] text-dock-subtext">Status changed to In-Progress by technician</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="switchTab('create-ticket')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-1.5 rounded flex items-center gap-1 font-semibold transition-colors shadow-sm">
+                <i class="fas fa-plus"></i>
+                <span class="hidden sm:inline">New Ticket</span>
+            </button>
+            <div class="h-6 w-[1px] bg-slate-600 mx-1"></div>
+            <div class="flex items-center space-x-2 cursor-pointer">
+                <div class="w-7 h-7 rounded-full bg-emerald-600 flex items-center justify-center font-bold border border-slate-300 text-xs text-white">
+                    LA
+                </div>
+                <span class="hidden lg:inline text-xs font-semibold text-slate-200">Layan Al-anazi</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- App Body Container -->
+    <div class="flex flex-1 overflow-hidden bg-white dark:bg-dock-navy relative">
+
+        <!-- Sidebar Navigation -->
+        <aside id="mainSidebar" class="w-64 bg-white border-r border-dock-border flex flex-col justify-between transition-all duration-300 z-20 shadow-sm">
+            <div class="p-3">
+                <nav class="space-y-1">
+                    <a href="javascript:void(0)" onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded text-white bg-emerald-600 font-bold shadow-sm">
+                        <i class="fas fa-chart-pie w-5 text-center text-base text-white"></i>
+                        <span>Dashboard & KPIs</span>
+                    </a>
+                    <a href="javascript:void(0)" onclick="switchTab('create-ticket')" id="nav-create-ticket" class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors">
+                        <i class="fas fa-ticket-alt w-5 text-center text-base text-emerald-600"></i>
+                        <span>Create New Ticket</span>
+                    </a>
+                    <a href="javascript:void(0)" onclick="switchTab('tickets-list')" id="nav-tickets-list" class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors">
+                        <i class="fas fa-list-check w-5 text-center text-base text-emerald-600"></i>
+                        <span>Tickets List</span>
+                        <span class="mr-auto bg-emerald-600 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold" id="badgeTicketsCount">3</span>
+                    </a>
+                    <a href="javascript:void(0)" onclick="switchTab('knowledge-base')" id="nav-knowledge-base" class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors">
+                        <i class="fas fa-book-open w-5 text-center text-base text-emerald-600"></i>
+                        <span>Knowledge Base</span>
+                    </a>
+                    <a href="javascript:void(0)" onclick="switchTab('assets')" id="nav-assets" class="nav-btn flex items-center gap-3 px-3 py-2.5 rounded text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors">
+                        <i class="fas fa-laptop-house w-5 text-center text-base text-emerald-600"></i>
+                        <span>IT Assets & Equipment</span>
+                    </a>
+                </nav>
+            </div>
+
+            <!-- Sidebar Footer Status -->
+            <div class="p-3 bg-white border-t border-dock-border text-xs">
+                <div class="flex items-center justify-between text-slate-500 mb-1">
+                    <span>Central Servers Status</span>
+                    <span class="flex items-center text-dock-success text-[11px] font-bold">
+                        <span class="w-2 h-2 rounded-full bg-dock-success inline-block mr-1 animate-pulse"></span> ONLINE
+                    </span>
+                </div>
+                <div class="text-[11px] text-slate-500">IT Infrastructure: 99.9%</div>
+                <div class="mt-2 pt-2 border-t border-slate-100 text-[10px] text-emerald-700 text-center font-bold">
+                    Designed & Developed by: Layan Al-anazi 💻
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content View Area -->
+        <main class="flex-1 overflow-y-auto p-4 sm:p-6 bg-[#f8fafc] dark:bg-dock-navy">
+            <!-- Section 1: Dashboard View -->
+            <section id="tab-dashboard" class="space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded border border-dock-border shadow-sm">
+                    <div>
+                        <h1 class="text-xl font-bold text-dock-navy flex items-center gap-2">
+                            <i class="fas fa-chart-pie text-emerald-600"></i>
+                            IT Core Operations Dashboard
+                        </h1>
+                        <p class="text-dock-subtext text-xs mt-0.5">Welcome back, Layan Al-anazi — unified enterprise infrastructure management.</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="refreshDashboard()" class="bg-white border border-dock-border text-dock-text hover:bg-emerald-50 px-3 py-1.5 rounded text-xs flex items-center gap-1 font-semibold transition-colors">
+                            <i class="fas fa-sync-alt text-dock-subtext"></i>
+                            Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <!-- KPI Tiles Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="dock-tile bg-white p-4 rounded shadow-sm cursor-pointer" onclick="filterTickets('all')">
+                        <div class="flex justify-between items-start">
+                            <span class="text-xs font-bold text-dock-subtext uppercase">Active Tickets</span>
+                            <div class="p-2 bg-emerald-50 text-emerald-600 rounded">
+                                <i class="fas fa-folder-open text-base"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3 flex items-baseline justify-between">
+                            <span class="text-3xl font-extrabold text-dock-navy" id="kpiOpenTickets">3</span>
+                            <span class="text-xs font-semibold text-emerald-600">Operational</span>
+                        </div>
+                        <div class="mt-2 w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
+                            <div class="bg-emerald-600 h-full w-[65%]"></div>
+                        </div>
+                    </div>
+
+                    <div class="dock-tile bg-white p-4 rounded shadow-sm cursor-pointer" onclick="filterTickets('In-Progress')">
+                        <div class="flex justify-between items-start">
+                            <span class="text-xs font-bold text-dock-subtext uppercase">In-Progress Tickets</span>
+                            <div class="p-2 bg-amber-50 text-dock-warning rounded">
+                                <i class="fas fa-spinner text-base"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3 flex items-baseline justify-between">
+                            <span class="text-3xl font-extrabold text-dock-navy" id="kpiInProgTickets">2</span>
+                            <span class="text-xs font-semibold text-dock-warning">Being Resolved</span>
+                        </div>
+                        <div class="mt-2 w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
+                            <div class="bg-dock-warning h-full w-[40%]"></div>
+                        </div>
+                    </div>
+
+                    <div class="dock-tile bg-white p-4 rounded shadow-sm cursor-pointer" onclick="filterTickets('Closed')">
+                        <div class="flex justify-between items-start">
+                            <span class="text-xs font-bold text-dock-subtext uppercase">Resolved Tickets</span>
+                            <div class="p-2 bg-emerald-50 text-dock-success rounded">
+                                <i class="fas fa-check-circle text-base"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3 flex items-baseline justify-between">
+                            <span class="text-3xl font-extrabold text-dock-navy" id="kpiClosedTickets">1</span>
+                            <span class="text-xs font-semibold text-dock-success">This Month</span>
+                        </div>
+                        <div class="mt-2 w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
+                            <div class="bg-dock-success h-full w-[100%]"></div>
+                        </div>
+                    </div>
+
+                    <div class="dock-tile bg-white p-4 rounded shadow-sm cursor-pointer" onclick="switchTab('assets')">
+                        <div class="flex justify-between items-start">
+                            <span class="text-xs font-bold text-dock-subtext uppercase">Assigned IT Assets</span>
+                            <div class="p-2 bg-emerald-50 text-emerald-600 rounded">
+                                <i class="fas fa-laptop text-base"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3 flex items-baseline justify-between">
+                            <span class="text-3xl font-extrabold text-dock-navy">3</span>
+                            <span class="text-xs font-semibold text-emerald-600">Hardware items</span>
+                        </div>
+                        <div class="mt-2 w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
+                            <div class="bg-emerald-600 h-full w-[80%]"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Grid Layout -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 bg-white rounded border border-dock-border shadow-sm flex flex-col">
+                        <div class="p-4 border-b border-dock-border flex justify-between items-center">
+                            <h2 class="font-bold text-dock-navy text-sm flex items-center gap-2">
+                                <i class="fas fa-history text-emerald-600"></i>
+                                Recent Tickets & SLA Tracking
+                            </h2>
+                            <button onclick="switchTab('tickets-list')" class="text-emerald-600 hover:underline text-xs font-semibold">
+                                View All <i class="fas fa-chevron-right text-[10px]"></i>
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-slate-50 text-dock-subtext border-b border-dock-border">
+                                    <tr>
+                                        <th class="p-3">Ticket ID</th>
+                                        <th class="p-3">Subject</th>
+                                        <th class="p-3">Status</th>
+                                        <th class="p-3">SLA Remaining</th>
+                                        <th class="p-3">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dashboardTicketsTable" class="divide-y divide-dock-border">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Quick Services -->
+                    <div class="space-y-6">
+                        <div class="bg-white rounded border border-dock-border p-4 shadow-sm">
+                            <h2 class="font-bold text-dock-navy text-sm mb-3 border-b border-dock-border pb-2 flex items-center gap-2">
+                                <i class="fas fa-bolt text-dock-gold"></i>
+                                Quick IT Services
+                            </h2>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="quickCreate('Request system access role change', 'Enterprise Systems')" class="p-3 text-left bg-slate-50 hover:bg-emerald-50 rounded border border-dock-border transition-all flex flex-col items-start">
+                                    <i class="fas fa-user-plus text-emerald-600 mb-1 text-base"></i>
+                                    <span class="font-bold text-xs text-dock-navy">Access Roles</span>
+                                    <span class="text-[10px] text-dock-subtext">Request account setup</span>
+                                </button>
+                                <button onclick="quickPasswordModal()" class="p-3 text-left bg-slate-50 hover:bg-emerald-50 rounded border border-dock-border transition-all flex flex-col items-start">
+                                    <i class="fas fa-key text-dock-gold mb-1 text-base"></i>
+                                    <span class="font-bold text-xs text-dock-navy">Password Reset</span>
+                                    <span class="text-[10px] text-dock-subtext">Single sign-on OTP</span>
+                                </button>
+                                <button onclick="quickCreate('Request new laptop hardware', 'Hardware')" class="p-3 text-left bg-slate-50 hover:bg-emerald-50 rounded border border-dock-border transition-all flex flex-col items-start">
+                                    <i class="fas fa-laptop text-emerald-600 mb-1 text-base"></i>
+                                    <span class="font-bold text-xs text-dock-navy">New Hardware</span>
+                                    <span class="text-[10px] text-dock-subtext">Laptop / Accessories</span>
+                                </button>
+                                <button onclick="quickCreate('VPN connectivity troubleshooting', 'Network & VPN')" class="p-3 text-left bg-slate-50 hover:bg-emerald-50 rounded border border-dock-border transition-all flex flex-col items-start">
+                                    <i class="fas fa-wifi text-emerald-600 mb-1 text-base"></i>
+                                    <span class="font-bold text-xs text-dock-navy">Network & VPN</span>
+                                    <span class="text-[10px] text-dock-subtext">Remote connection</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- AI Smart Assistant Widget Card -->
+                        <div class="bg-gradient-to-br from-emerald-900 to-emerald-950 text-white rounded border border-emerald-800 p-4 shadow-sm relative overflow-hidden">
+                            <div class="absolute -right-4 -bottom-4 text-emerald-800/30 text-6xl pointer-events-none">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <h2 class="font-bold text-sm mb-1 flex items-center gap-2">
+                                <i class="fas fa-brain text-emerald-400"></i>
+                                IT AI Copilot
+                            </h2>
+                            <p class="text-[11px] text-emerald-200 mb-3">Instant diagnosis and automated resolution for technical inquiries.</p>
+                            <button onclick="toggleAiChat()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-1.5 rounded text-xs font-bold transition-colors shadow flex items-center justify-center gap-1.5">
+                                <i class="fas fa-comments"></i> Launch AI Assistant
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 2: Create New Ticket -->
+            <section id="tab-create-ticket" class="hidden max-w-4xl mx-auto space-y-6">
+                <div class="bg-white p-6 rounded border border-dock-border shadow-sm">
+                    <div class="border-b border-dock-border pb-4 mb-6">
+                        <h1 class="text-xl font-bold text-dock-navy flex items-center gap-2">
+                            <i class="fas fa-ticket-alt text-emerald-600"></i>
+                            Create New Support Ticket
+                        </h1>
+                        <p class="text-dock-subtext text-xs mt-1">Please fill in the form below with accurate details to ensure rapid response time.</p>
+                    </div>
+
+                    <form id="createTicketForm" onsubmit="submitTicketForm(event)" class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="ticketPriority" class="block text-xs font-bold text-dock-text mb-1">Priority Level <span class="text-dock-danger">*</span></label>
+                                <select id="ticketPriority" required class="w-full bg-white border border-dock-border rounded p-2 text-xs text-dock-text dock-input">
+                                    <option value="Normal">Normal (Within 24 hours)</option>
+                                    <option value="Medium">Medium (Within 12 hours)</option>
+                                    <option value="High">High (Within 4 hours)</option>
+                                    <option value="Critical">Critical (Full workflow stoppage)</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label for="ticketCategory" class="block text-xs font-bold text-dock-text mb-1">Service Category <span class="text-dock-danger">*</span></label>
+                                <select id="ticketCategory" required class="w-full bg-white border border-dock-border rounded p-2 text-xs text-dock-text dock-input">
+                                    <option value="">-- Select Category --</option>
+                                    <option value="Enterprise Systems">Enterprise Systems & Access</option>
+                                    <option value="Hardware">Hardware (Laptop, Printer, Display)</option>
+                                    <option value="Software">Software (Office, Windows, Apps)</option>
+                                    <option value="Network & VPN">Network & Internet / VPN</option>
+                                    <option value="Cybersecurity">Cybersecurity & Passwords</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="ticketSubject" class="block text-xs font-bold text-dock-text mb-1">Subject / Issue Summary <span class="text-dock-danger">*</span></label>
+                            <input type="text" id="ticketSubject" required placeholder="e.g., Unable to login to procurement portal" 
+                                   class="w-full bg-white border border-dock-border rounded p-2 text-xs text-dock-text dock-input">
+                        </div>
+
+                        <div>
+                            <label for="ticketAsset" class="block text-xs font-bold text-dock-text mb-1">Related IT Asset (Optional)</label>
+                            <select id="ticketAsset" class="w-full bg-white border border-dock-border rounded p-2 text-xs text-dock-text dock-input">
+                                <option value="None / General Software">None / General Software Issue</option>
+                                <option value="Dell Latitude 5520 (S/N: DL-99482)">Dell Latitude 5520 (S/N: DL-99482) - Current Device</option>
+                                <option value="HP LaserJet M507 Printer">HP LaserJet M507 Office Printer</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="ticketDescription" class="block text-xs font-bold text-dock-text mb-1">Issue Details & Steps <span class="text-dock-danger">*</span></label>
+                            <textarea id="ticketDescription" rows="5" required placeholder="Describe the problem, error messages, and any relevant troubleshooting steps..." 
+                                      class="w-full bg-white border border-dock-border rounded p-2 text-xs text-dock-text dock-input"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-dock-text mb-1">Attachment (Optional)</label>
+                            <div class="border-2 border-dashed border-dock-border rounded p-4 text-center bg-slate-50 hover:bg-emerald-50 transition-colors cursor-pointer" onclick="document.getElementById('ticketFile').click()">
+                                <i class="fas fa-cloud-upload-alt text-2xl text-emerald-600 mb-1"></i>
+                                <p class="text-xs text-dock-text font-semibold">Click here to attach screenshot or drop file</p>
+                                <p class="text-[10px] text-dock-subtext mt-1">PNG, JPG, PDF (Max 10MB)</p>
+                                <input type="file" id="ticketFile" class="hidden" onchange="showToast('File attached successfully')">
+                            </div>
+                        </div>
+
+                        <div class="flex justify-end gap-2 pt-4 border-t border-dock-border">
+                            <button type="button" onclick="switchTab('dashboard')" class="px-4 py-2 rounded bg-white border border-dock-border text-dock-text hover:bg-slate-50 font-semibold text-xs">
+                                Cancel
+                            </button>
+                            <button type="submit" class="px-6 py-2 rounded bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow">
+                                Submit Ticket Now
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Section 3: Tickets List -->
+            <section id="tab-tickets-list" class="hidden space-y-6">
+                <div class="bg-white p-4 rounded border border-dock-border shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h1 class="text-lg font-bold text-dock-navy flex items-center gap-2">
+                            <i class="fas fa-list-check text-emerald-600"></i>
+                            Tickets History & Requests
+                        </h1>
+                        <p class="text-dock-subtext text-xs mt-0.5">Review and track all your submitted support tickets and processing statuses.</p>
+                    </div>
+
+                    <div class="flex flex-wrap gap-2 w-full md:w-auto">
+                        <select id="filterStatus" onchange="applyTicketFilters()" class="bg-slate-50 border border-dock-border rounded px-3 py-1.5 text-xs text-dock-text dock-input">
+                            <option value="All Statuses">All Statuses</option>
+                            <option value="New">New</option>
+                            <option value="In-Progress">In-Progress</option>
+                            <option value="Closed">Closed</option>
+                        </select>
+                        <select id="filterPriority" onchange="applyTicketFilters()" class="bg-slate-50 border border-dock-border rounded px-3 py-1.5 text-xs text-dock-text dock-input">
+                            <option value="All Priorities">All Priorities</option>
+                            <option value="Critical">Critical</option>
+                            <option value="High">High</option>
+                            <option value="Medium">Medium</option>
+                            <option value="Normal">Normal</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded border border-dock-border shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs">
+                            <thead class="bg-dock-header text-white">
+                                <tr>
+                                    <th class="p-3">Ticket ID</th>
+                                    <th class="p-3">Subject</th>
+                                    <th class="p-3">Category</th>
+                                    <th class="p-3">Priority</th>
+                                    <th class="p-3">Status</th>
+                                    <th class="p-3">Submitted Date</th>
+                                    <th class="p-3 text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ticketsListTable" class="divide-y divide-dock-border">
+                                <!-- Loaded via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 4: Knowledge Base -->
+            <section id="tab-knowledge-base" class="hidden space-y-6">
+                <div class="bg-white p-6 rounded border border-dock-border shadow-sm">
+                    <h1 class="text-xl font-bold text-dock-navy mb-2 flex items-center gap-2">
+                        <i class="fas fa-lightbulb text-dock-gold"></i>
+                        IT Knowledge Base & Self-Service
+                    </h1>
+                    <p class="text-dock-subtext text-xs mb-6">Search for direct solutions and troubleshooting guides before submitting a ticket.</p>
+
+                    <div class="relative max-w-2xl mb-8">
+                        <input type="text" id="kbSearchInput" onkeyup="searchKBArticles()" placeholder="How to reset password? How to connect to VPN?" 
+                               class="w-full bg-slate-50 border border-dock-border rounded px-10 py-3 text-xs text-dock-text dock-input shadow-inner">
+                        <i class="fas fa-search absolute left-3.5 top-3.5 text-dock-subtext"></i>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="kbArticlesContainer">
+                        <div class="p-4 border border-dock-border rounded bg-slate-50 hover:border-emerald-600 transition-all cursor-pointer">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="p-2 bg-emerald-100 text-emerald-600 rounded">
+                                    <i class="fas fa-desktop text-lg"></i>
+                                </div>
+                                <h3 class="font-bold text-dock-navy text-sm">Enterprise Systems</h3>
+                            </div>
+                            <ul class="text-xs text-dock-subtext space-y-1.5 list-none">
+                                <li onclick="openArticleModal('Session Timeout Fix', 'When experiencing session timeouts, clear browser cache by pressing Ctrl + Shift + R and re-login with your employee ID.')" class="hover:text-emerald-600 flex items-center gap-1 cursor-pointer"><i class="fas fa-file-alt text-[10px]"></i> Session Timeout Fix</li>
+                                <li onclick="openArticleModal('Custom Dashboards Layouts', 'Customize your display view via UI Settings and save your current configuration as favorite.')" class="hover:text-emerald-600 flex items-center gap-1 cursor-pointer"><i class="fas fa-file-alt text-[10px]"></i> Custom Dashboards Layouts</li>
+                                <li onclick="openArticleModal('Exporting Reports to Excel', 'Click advanced options on tables and choose XLSX format to open reports directly in Excel.')" class="hover:text-emerald-600 flex items-center gap-1 cursor-pointer"><i class="fas fa-file-alt text-[10px]"></i> Exporting Reports to Excel</li>
+                            </ul>
+                        </div>
+
+                        <div class="p-4 border border-dock-border rounded bg-slate-50 hover:border-emerald-600 transition-all cursor-pointer">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="p-2 bg-amber-100 text-dock-gold rounded">
+                                    <i class="fas fa-key text-lg"></i>
+                                </div>
+                                <h3 class="font-bold text-dock-navy text-sm">Accounts & Passwords</h3>
+                            </div>
+                            <ul class="text-xs text-dock-subtext space-y-1.5 list-none">
+                                <li onclick="quickPasswordModal()" class="hover:text-emerald-600 flex items-center gap-1 cursor-pointer"><i class="fas fa-key text-[10px] text-dock-gold"></i> Self-Service Password Reset Steps</li>
+                                <li onclick="openArticleModal('Multi-Factor Authentication (MFA)', 'Download Authenticator app and open your account QR code screen to complete pairing.')" class="hover:text-emerald-600 flex items-center gap-1 cursor-pointer"><i class="fas fa-shield-alt text-[10px]"></i> Multi-Factor Authentication (MFA)</li>
+                                <li onclick="openArticleModal('Unlocking Locked Accounts', 'Accounts lock for 15 minutes after 3 incorrect attempts. Reset instantly using OTP via IT Core portal.')" class="hover:text-emerald-600 flex items-center gap-1 cursor-pointer"><i class="fas fa-lock-open text-[10px]"></i> Unlocking Locked Accounts</li>
+                            </ul>
+                        </div>
+
+                        <div class="p-4 border border-dock-border rounded bg-slate-50 hover:border-emerald-600 transition-all cursor-pointer">
+                            <div class="flex items-center gap-3 mb-2">
+                                <div class="p-2 bg-emerald-100 text-emerald-600 rounded">
+                                    <i class="fas fa-wifi text-lg"></i>
+                                </div>
+                                <h3 class="font-bold text-dock-navy text-sm">Network & Remote Access</h3>
+                            </div>
+                            <ul class="text-xs text-dock-subtext space-y-1.5 list-none">
+                                <li onclick="openArticleModal('Automatic VPN Connection Guide', 'Run Cisco AnyConnect or GlobalProtect and select server vpn.company.sa followed by your corporate account.')" class="hover:text-emerald-600 flex items-center gap-1 cursor-pointer"><i class="fas fa-network-wired text-[10px]"></i> Automatic VPN Connection Guide</li>
+                                <li onclick="openArticleModal('Wireless Printers Setup', 'Go to Printers Settings -> Add Printer -> enter IP address displayed on the printer physical label.')" class="hover:text-emerald-600 flex items-center gap-1 cursor-pointer"><i class="fas fa-print text-[10px]"></i> Wireless Printers Setup</li>
+                                <li onclick="openArticleModal('Troubleshooting Network Latency', 'Ensure heavy download tasks are closed and check Ethernet cable connection or restart adapter.')" class="hover:text-emerald-600 flex items-center gap-1 cursor-pointer"><i class="fas fa-tachometer-alt text-[10px]"></i> Troubleshooting Network Latency</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 5: IT Assets -->
+            <section id="tab-assets" class="hidden space-y-6">
+                <div class="bg-white p-6 rounded border border-dock-border shadow-sm">
+                    <h1 class="text-xl font-bold text-dock-navy mb-2 flex items-center gap-2">
+                        <i class="fas fa-laptop-house text-emerald-600"></i>
+                        Assigned IT Assets & Equipment
+                    </h1>
+                    <p class="text-dock-subtext text-xs mb-6">List of hardware assets and technical accounts registered to your employee profile.</p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="p-4 border border-dock-border rounded bg-slate-50 flex justify-between items-start flex-col sm:flex-row gap-3">
+                            <div>
+                                <span class="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded">Primary Laptop</span>
+                                <h3 class="font-bold text-dock-navy text-sm mt-2">Dell Latitude 5520</h3>
+                                <p class="text-xs text-dock-subtext mt-1">Serial Number: <span class="font-mono text-dock-navy font-semibold">DL-99482-KSA</span></p>
+                                <p class="text-xs text-dock-subtext">Assigned: Jan 15, 2025</p>
+                            </div>
+                            <div class="flex gap-2 sm:flex-col">
+                                <button onclick="showQRCode('DL-99482-KSA', 'Dell Latitude 5520')" class="bg-white border border-dock-border text-dock-navy hover:bg-slate-100 text-xs px-3 py-1.5 rounded font-semibold transition-colors flex items-center gap-1">
+                                    <i class="fas fa-qrcode"></i> QR Code
+                                </button>
+                                <button onclick="quickCreate('Maintenance request for Dell Latitude 5520', 'Hardware')" class="bg-emerald-600 text-white hover:bg-emerald-700 text-xs px-3 py-1.5 rounded font-semibold transition-colors">
+                                    Maintenance
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="p-4 border border-dock-border rounded bg-slate-50 flex justify-between items-start flex-col sm:flex-row gap-3">
+                            <div>
+                                <span class="bg-amber-100 text-dock-warning text-[10px] font-bold px-2 py-0.5 rounded">Display & Monitor</span>
+                                <h3 class="font-bold text-dock-navy text-sm mt-2">Dell UltraSharp 27 Monitor</h3>
+                                <p class="text-xs text-dock-subtext mt-1">Serial Number: <span class="font-mono text-dock-navy font-semibold">MON-27-8819</span></p>
+                                <p class="text-xs text-dock-subtext">Assigned: Feb 20, 2025</p>
+                            </div>
+                            <div class="flex gap-2 sm:flex-col">
+                                <button onclick="showQRCode('MON-27-8819', 'Dell UltraSharp 27 Monitor')" class="bg-white border border-dock-border text-dock-navy hover:bg-slate-100 text-xs px-3 py-1.5 rounded font-semibold transition-colors flex items-center gap-1">
+                                    <i class="fas fa-qrcode"></i> QR Code
+                                </button>
+                                <button onclick="quickCreate('Replacement request for Dell UltraSharp', 'Hardware')" class="bg-emerald-600 text-white hover:bg-emerald-700 text-xs px-3 py-1.5 rounded font-semibold transition-colors">
+                                    Replace
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="p-4 border border-dock-border rounded bg-slate-50 flex justify-between items-start flex-col sm:flex-row gap-3">
+                            <div>
+                                <span class="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-0.5 rounded">Office Printer</span>
+                                <h3 class="font-bold text-dock-navy text-sm mt-2">HP LaserJet Pro M404dn</h3>
+                                <p class="text-xs text-dock-subtext mt-1">Serial Number: <span class="font-mono text-dock-navy font-semibold">HP-404-5511</span></p>
+                                <p class="text-xs text-dock-subtext">Assigned: Mar 05, 2025</p>
+                            </div>
+                            <div class="flex gap-2 sm:flex-col">
+                                <button onclick="showQRCode('HP-404-5511', 'HP LaserJet Pro M404dn')" class="bg-white border border-dock-border text-dock-navy hover:bg-slate-100 text-xs px-3 py-1.5 rounded font-semibold transition-colors flex items-center gap-1">
+                                    <i class="fas fa-qrcode"></i> QR Code
+                                </button>
+                                <button onclick="quickCreate('Toner cartridge request for HP LaserJet', 'Hardware')" class="bg-emerald-600 text-white hover:bg-emerald-700 text-xs px-3 py-1.5 rounded font-semibold transition-colors">
+                                    Request Toner
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- AI Copilot Chat Drawer / Modal -->
+    <div id="aiChatDrawer" class="fixed bottom-4 right-4 w-80 sm:w-96 bg-white rounded-xl shadow-2xl border border-emerald-200 z-50 flex flex-col hidden overflow-hidden">
+        <div class="bg-emerald-600 text-white p-3 flex justify-between items-center">
+            <h3 class="font-bold text-xs flex items-center gap-2">
+                <i class="fas fa-brain"></i> IT Core AI Copilot
+            </h3>
+            <button onclick="toggleAiChat()" class="text-white hover:text-slate-200 text-sm"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="aiChatMessages" class="p-3 h-64 overflow-y-auto space-y-2 bg-slate-50 text-xs">
+            <div class="bg-emerald-100 text-emerald-900 p-2 rounded max-w-[85%]">
+                Hello Layan! I'm your IT AI Assistant. How can I help you diagnose or resolve technical issues today?
+            </div>
+        </div>
+        <div class="p-2 bg-white border-t border-dock-border flex gap-2">
+            <input type="text" id="aiInput" placeholder="Ask AI about VPN, printer, or password..." class="flex-1 bg-slate-50 border border-dock-border rounded px-2 py-1.5 text-xs dock-input" onkeypress="if(event.key === 'Enter') sendAiMessage()">
+            <button onclick="sendAiMessage()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded text-xs font-bold"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <!-- Password Reset Modal -->
+    <div id="passwordModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full space-y-4 shadow-2xl border border-dock-border">
+            <div class="flex justify-between items-center border-b border-dock-border pb-3">
+                <h3 class="font-bold text-dock-navy text-base flex items-center gap-2">
+                    <i class="fas fa-key text-dock-gold"></i>
+                    Single Sign-On Password Reset
+                </h3>
+                <button onclick="closePasswordModal()" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div id="pwdStep1" class="space-y-3">
+                <p class="text-xs text-dock-subtext">Enter your employee ID or username to generate a temporary verification token:</p>
+                <div>
+                    <label class="block text-xs font-bold text-dock-navy mb-1">Employee ID / Account</label>
+                    <input type="text" id="pwdEmpId" value="472091" class="w-full border border-dock-border rounded p-2 text-xs dock-input font-mono">
+                </div>
+                <button onclick="generateOTP()" class="w-full bg-dock-header text-white py-2 rounded text-xs font-bold shadow hover:bg-slate-800">Send OTP Verification Code</button>
+            </div>
+
+            <div id="pwdStep2" class="space-y-3 hidden">
+                <div class="p-3 bg-amber-50 border-l-4 border-dock-warning rounded text-xs">
+                    <p class="font-bold text-dock-navy">OTP Sent Successfully!</p>
+                    <p class="text-[11px] text-dock-subtext">Demo temporary verification code: <span class="font-mono font-bold text-emerald-600 text-sm" id="generatedOTP">9482</span></p>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-dock-navy mb-1">Enter 4-Digit Code</label>
+                    <input type="text" id="inputOTP" placeholder="9482" class="w-full border border-dock-border rounded p-2 text-xs dock-input font-mono text-center text-lg tracking-widest">
+                </div>
+                <button onclick="confirmResetPassword()" class="w-full bg-dock-success text-white py-2 rounded text-xs font-bold shadow hover:bg-emerald-600">Confirm & Reset Password</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Article Knowledge Base Modal -->
+    <div id="articleModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg p-6 max-w-lg w-full space-y-4 shadow-2xl border border-dock-border">
+            <div class="flex justify-between items-center border-b border-dock-border pb-3">
+                <h3 id="articleTitle" class="font-bold text-dock-navy text-base flex items-center gap-2"></h3>
+                <button onclick="closeArticleModal()" class="text-slate-400 hover:text-slate-600"><i class="fas fa-times"></i></button>
+            </div>
+            <p id="articleContent" class="text-xs text-dock-text leading-relaxed bg-slate-50 p-4 rounded border border-dock-border"></p>
+            <div class="flex justify-end gap-2 pt-2">
+                <button onclick="closeArticleModal()" class="bg-dock-header text-white px-4 py-2 rounded text-xs font-bold">Close Article</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Code Modal -->
+    <div id="qrModal" class="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg p-6 max-w-xs w-full text-center space-y-3 shadow-2xl border border-dock-border">
+            <h3 class="font-bold text-dock-navy text-sm" id="qrAssetName">Asset QR Code</h3>
+            <div class="bg-white p-4 inline-block rounded border border-dock-border">
+                <i class="fas fa-qrcode text-6xl text-dock-navy"></i>
+            </div>
+            <p class="font-mono text-xs text-dock-subtext" id="qrSerial">S/N: DL-99482</p>
+            <button onclick="closeQRModal()" class="w-full bg-emerald-600 text-white py-1.5 rounded text-xs font-bold">Close</button>
+        </div>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        /**
+         * IT Core Enterprise Platform
+         * Designed & Developed by: Layan Al-anazi
+         */
+
+        function switchTab(tabId) {
+            const sections = ['dashboard', 'create-ticket', 'tickets-list', 'knowledge-base', 'assets'];
+            sections.forEach(s => {
+                const el = document.getElementById('tab-' + s);
+                if (el) el.classList.add('hidden');
+                const nav = document.getElementById('nav-' + s);
+                if (nav) {
+                    nav.classList.remove('bg-emerald-600', 'font-bold', 'text-white', 'shadow-sm');
+                    nav.classList.add('text-slate-700', 'hover:bg-emerald-50', 'hover:text-emerald-700');
+                    const icon = nav.querySelector('i');
+                    if(icon) {
+                        icon.classList.remove('text-white');
+                        icon.classList.add('text-emerald-600');
+                    }
+                }
+            });
+
+            const targetEl = document.getElementById('tab-' + tabId);
+            if (targetEl) targetEl.classList.remove('hidden');
+
+            const targetNav = document.getElementById('nav-' + tabId);
+            if (targetNav) {
+                targetNav.classList.remove('text-slate-700', 'hover:bg-emerald-50', 'hover:text-emerald-700');
+                targetNav.classList.add('bg-emerald-600', 'font-bold', 'text-white', 'shadow-sm');
+                const icon = targetNav.querySelector('i');
+                if(icon) {
+                    icon.classList.remove('text-emerald-600');
+                    icon.classList.add('text-white');
+                }
+            }
+
+            if (tabId === 'tickets-list') {
+                renderTicketsList();
+            } else if (tabId === 'dashboard') {
+                renderDashboardTickets();
+            }
+        }
+
+        let ticketsData = [
+            {
+                id: 'INC-10492',
+                subject: 'Error printing reports and electronic form',
+                category: 'Enterprise Systems',
+                priority: 'High',
+                status: 'In-Progress',
+                slaMinutes: 120,
+                date: '2026-11-10 09:30',
+                description: 'When trying to print sales form, error code PRN-004 appears and the default office printer is not detected.',
+                replies: [
+                    { sender: 'Layan Al-anazi', text: 'Ticket opened with error screenshot attached.', time: '09:30' },
+                    { sender: 'IT Support Team', text: 'Reinstalling printer drivers and updating access roles.', time: '10:15' }
+                ]
+            },
+            {
+                id: 'INC-10490',
+                subject: 'Single sign-on password reset request',
+                category: 'Cybersecurity',
+                priority: 'Medium',
+                status: 'Closed',
+                slaMinutes: 0,
+                date: '2026-11-09 14:10',
+                description: 'Account locked due to incorrect password attempts exceeding 3 times.',
+                replies: [
+                    { sender: 'Layan Al-anazi', text: 'Please unlock account.', time: '14:10' },
+                    { sender: 'IT Support Team', text: 'Password reset and temporary OTP token sent to mobile.', time: '14:25' }
+                ]
+            },
+            {
+                id: 'INC-10488',
+                subject: 'Home VPN connectivity slowness and latency',
+                category: 'Network & VPN',
+                priority: 'Normal',
+                status: 'In-Progress',
+                slaMinutes: 340,
+                date: '2026-11-08 11:00',
+                description: 'Intermittent disconnects experienced when browsing internal file servers.',
+                replies: [
+                    { sender: 'Layan Al-anazi', text: 'Latency exceeds 400ms.', time: '11:00' }
+                ]
+            },
+            {
+                id: 'INC-10485',
+                subject: 'ERP System access permissions update',
+                category: 'Enterprise Systems',
+                priority: 'Medium',
+                status: 'New',
+                slaMinutes: 480,
+                date: '2026-11-07 16:20',
+                description: 'Requesting Project Manager role to track purchase orders and approvals.',
+                replies: [
+                    { sender: 'Layan Al-anazi', text: 'Department manager approval attached.', time: '16:20' }
+                ]
+            },
+            {
+                id: 'INC-10480',
+                subject: 'HP LaserJet printer maintenance and toner',
+                category: 'Hardware',
+                priority: 'Normal',
+                status: 'Closed',
+                slaMinutes: 0,
+                date: '2026-11-05 10:00',
+                description: 'Black toner cartridge depleted in IT department printer.',
+                replies: [
+                    { sender: 'IT Support Team', text: 'New toner installed and test print completed.', time: '11:30' }
+                ]
+            }
+        ];
+
+        function renderDashboardTickets() {
+            const tbody = document.getElementById('dashboardTicketsTable');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            ticketsData.slice(0, 4).forEach(t => {
+                let badgeClass = 'bg-emerald-100 text-emerald-700';
+                if (t.status === 'In-Progress') badgeClass = 'bg-amber-100 text-dock-warning';
+                if (t.status === 'Closed') badgeClass = 'bg-emerald-100 text-dock-success';
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition-colors">
+                        <td class="p-3 font-mono font-bold text-dock-navy">${t.id}</td>
+                        <td class="p-3 font-semibold">${t.subject}</td>
+                        <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${badgeClass}">${t.status}</span></td>
+                        <td class="p-3 text-dock-subtext font-mono">${t.slaMinutes > 0 ? t.slaMinutes + ' mins' : 'SLA Met'}</td>
+                        <td class="p-3">
+                            <button onclick="showToast('Viewing ticket details: ${t.id}')" class="text-emerald-600 hover:underline font-bold">Details</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            document.getElementById('kpiOpenTickets').innerText = ticketsData.length;
+            document.getElementById('kpiInProgTickets').innerText = ticketsData.filter(x => x.status === 'In-Progress').length;
+            document.getElementById('kpiClosedTickets').innerText = ticketsData.filter(x => x.status === 'Closed').length;
+        }
+
+        function renderTicketsList() {
+            const tbody = document.getElementById('ticketsListTable');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            ticketsData.forEach(t => {
+                let badgeClass = 'bg-emerald-100 text-emerald-700';
+                if (t.status === 'In-Progress') badgeClass = 'bg-amber-100 text-dock-warning';
+                if (t.status === 'Closed') badgeClass = 'bg-emerald-100 text-dock-success';
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50 transition-colors border-b border-dock-border">
+                        <td class="p-3 font-mono font-bold text-dock-navy">${t.id}</td>
+                        <td class="p-3 font-semibold">${t.subject}</td>
+                        <td class="p-3 text-dock-subtext">${t.category}</td>
+                        <td class="p-3 font-bold">${t.priority}</td>
+                        <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] font-bold ${badgeClass}">${t.status}</span></td>
+                        <td class="p-3 text-dock-subtext">${t.date}</td>
+                        <td class="p-3 text-center">
+                            <button onclick="showToast('Opened ticket ${t.id}')" class="bg-emerald-600 text-white px-3 py-1 rounded text-[11px] font-bold hover:bg-emerald-700">Inspect</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        window.onload = function() {
+            renderDashboardTickets();
+        };
+
+        function quickPasswordModal() {
+            document.getElementById('pwdStep1').classList.remove('hidden');
+            document.getElementById('pwdStep2').classList.add('hidden');
+            document.getElementById('passwordModal').classList.remove('hidden');
+        }
+
+        function closePasswordModal() {
+            document.getElementById('passwordModal').classList.add('hidden');
+        }
+
+        function generateOTP() {
+            const code = Math.floor(1000 + Math.random() * 9000);
+            document.getElementById('generatedOTP').innerText = code;
+            document.getElementById('pwdStep1').classList.add('hidden');
+            document.getElementById('pwdStep2').classList.remove('hidden');
+        }
+
+        function confirmResetPassword() {
+            closePasswordModal();
+            showToast('Password reset successfully! Temporary pass: TempPass@2026');
+            ticketsData.unshift({
+                id: 'INC-' + Math.floor(10000 + Math.random() * 90000),
+                subject: 'SSO Password Reset (Automated)',
+                category: 'Cybersecurity',
+                priority: 'Medium',
+                status: 'Closed',
+                slaMinutes: 0,
+                date: 'Just now',
+                description: 'Password reset completed via self-service OTP portal.',
+                replies: [{ sender: 'IT Core System', text: 'Process completed successfully.', time: 'Just now' }]
+            });
+            renderDashboardTickets();
+        }
+
+        function openArticleModal(title, content) {
+            document.getElementById('articleTitle').innerText = title;
+            document.getElementById('articleContent').innerText = content;
+            document.getElementById('articleModal').classList.remove('hidden');
+        }
+
+        function closeArticleModal() {
+            document.getElementById('articleModal').classList.add('hidden');
+        }
+
+        function searchKBArticles() {
+            const val = document.getElementById('kbSearchInput').value.toLowerCase();
+            const items = document.querySelectorAll('#kbArticlesContainer li');
+            items.forEach(li => {
+                li.style.display = li.innerText.toLowerCase().includes(val) ? 'flex' : 'none';
+            });
+        }
+
+        function quickCreate(subjectText, cat) {
+            switchTab('create-ticket');
+            document.getElementById('ticketSubject').value = subjectText;
+            if (cat) document.getElementById('ticketCategory').value = cat;
+        }
+
+        function handleGlobalSearch() {
+            const val = document.getElementById('globalSearchInput').value.toLowerCase();
+            if (!val) return;
+            switchTab('tickets-list');
+            const rows = document.querySelectorAll('#ticketsListTable tr');
+            rows.forEach(r => {
+                r.style.display = r.innerText.toLowerCase().includes(val) ? '' : 'none';
+            });
+        }
+
+        function toggleSidebar() {
+            document.getElementById('mainSidebar').classList.toggle('hidden');
+        }
+
+        function refreshDashboard() {
+            renderDashboardTickets();
+            showToast('Dashboard refreshed successfully');
+        }
+
+        function showToast(msg) {
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-4 right-4 bg-dock-header text-white px-4 py-2 rounded shadow-lg text-xs z-50';
+            toast.innerText = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => { toast.remove(); }, 3000);
+        }
+
+        function applyTicketFilters() {
+            const statusFilter = document.getElementById('filterStatus').value;
+            const priorityFilter = document.getElementById('filterPriority').value;
+            const rows = document.querySelectorAll('#ticketsListTable tr');
+
+            rows.forEach(row => {
+                const text = row.innerText;
+                let show = true;
+                if (statusFilter !== 'All Statuses' && !text.includes(statusFilter)) show = false;
+                if (priorityFilter !== 'All Priorities' && !text.includes(priorityFilter)) show = false;
+                row.style.display = show ? '' : 'none';
+            });
+        }
+
+        function filterTickets(status) {
+            switchTab('tickets-list');
+            if (document.getElementById('filterStatus')) {
+                document.getElementById('filterStatus').value = status === 'all' ? 'All Statuses' : status;
+                applyTicketFilters();
+            }
+        }
+
+        function showQRCode(serial, name) {
+            document.getElementById('qrAssetName').innerText = name;
+            document.getElementById('qrSerial').innerText = 'S/N: ' + serial;
+            document.getElementById('qrModal').classList.remove('hidden');
+        }
+
+        function closeQRModal() {
+            document.getElementById('qrModal').classList.add('hidden');
+        }
+
+        function submitTicketForm(e) {
+            e.preventDefault();
+            showToast('Ticket submitted successfully!');
+            switchTab('dashboard');
+        }
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            document.getElementById('themeIcon').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+        }
+
+        function toggleNotifications() {
+            document.getElementById('notifDropdown').classList.toggle('hidden');
+        }
+
+        function clearNotifs() {
+            document.getElementById('notifList').innerHTML = '<p class="text-[10px] text-dock-subtext text-center py-2">No new notifications</p>';
+            document.getElementById('notifBadge').classList.add('hidden');
+        }
+
+        // AI Copilot Chat Functions
+        function toggleAiChat() {
+            const drawer = document.getElementById('aiChatDrawer');
+            drawer.classList.toggle('hidden');
+        }
+
+        function sendAiMessage() {
+            const input = document.getElementById('aiInput');
+            const text = input.value.trim();
+            if(!text) return;
+
+            const msgContainer = document.getElementById('aiChatMessages');
+            msgContainer.innerHTML += `<div class="bg-emerald-600 text-white p-2 rounded max-w-[85%] ml-auto">${text}</div>`;
+            input.value = '';
+            msgContainer.scrollTop = msgContainer.scrollHeight;
+
+            setTimeout(() => {
+                let reply = "I recommend checking the Knowledge Base or resetting your credentials via Self-Service.";
+                const lower = text.toLowerCase();
+                if(lower.includes('vpn') || lower.includes('network')) {
+                    reply = "For VPN issues, ensure Cisco AnyConnect is updated and connect to vpn.company.sa.";
+                } else if(lower.includes('password') || lower.includes('reset')) {
+                    reply = "You can instantly reset your password using the 'Password Reset' quick service on your dashboard.";
+                } else if(lower.includes('printer')) {
+                    reply = "Make sure the printer IP matches the label, or submit a hardware ticket for driver reinstallation.";
+                }
+                msgContainer.innerHTML += `<div class="bg-emerald-100 text-emerald-900 p-2 rounded max-w-[85%]">${reply}</div>`;
+                msgContainer.scrollTop = msgContainer.scrollHeight;
+            }, 800);
+        }
+    </script>
+</body>
+</html>س
